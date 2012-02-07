@@ -1,25 +1,11 @@
-def fieldtrip(filename):
+def preprocessed_mat(directory, sensor):
     from scipy.io import loadmat
-    from numpy import where
-    matfile = loadmat(filename)
-    data = matfile['D']['trial'][0][0][0][0]
-    activity_starts_index = where(data[:306,:].sum(0)!=0)[0][0]
-    data = data[:, activity_starts_index:]
-
-    output = {}
-    output['magnetometer'] = data[0:102]
-    output['gradiometer'] = data[102:306]
-    return output
-
-def raw(filename):
-    from scipy.io import loadmat
-    from numpy import where
-    matfile = loadmat(filename)
-    data = matfile['D']
-    activity_starts_index = where(data[:306,:].sum(0)!=0)[0][0]
-    data = data[:, activity_starts_index:]
-
-    output = {}
-    output['magnetometer'] = data[0:102]
-    output['gradiometer'] = data[102:306]
-    return output
+    directory = '/data/alstottj/NIMH/rest/'+directory
+    if sensor=='planar':
+        matfile = loadmat(directory+'MEG_planar_preproc_norm2.mat')
+    elif sensor=='planar_combined':
+        matfile = loadmat(directory+'MEG_planar_preproc_norm.mat')
+    else: #axial
+        matfile = loadmat(directory+'MEG_'+sensor+'_preproc_norm.mat')
+    data = matfile['y_dev']*matfile['y_std']+matfile['y_m']
+    return data
