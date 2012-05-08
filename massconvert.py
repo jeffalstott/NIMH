@@ -1,33 +1,42 @@
 import os
-from importing import raw
-from avalanchetoolbox.input_processing import write_to_HDF5
+from importing import preprocessed_mat
+from avalanchetoolbox import preprocessing as preproc
 
-path = '/scratch/alstottj/MRC/For_Filtering/'
-output_directory = '/scratch/alstottj/MRC/For_Analysis/'
+path = '/data/alstottj/NIMH/Original/rest'
+output_path = '/data/alstottj/NIMH/Data/'
+group_name = 'NIMH'
+species = 'human'
+location = 'NIMH'
+sensor = 'axial'
+
 dirList=os.listdir(path)
 
-bands = ('delta', 'theta', 'alpha', 'beta', 'gamma', 'high-gamma', 'broad')#, 'raw')
+#bands = ('delta', 'theta', 'alpha', 'beta', 'raw', 'gamma', 'high-gamma', 'broad')
+bands = ('raw',)
 window='hamming'
-taps=25
+#taps=25
+taps = 512
+#downsample=100.0
+downsample=False
+sampling_rate = 600.0
 
-for fname in dirList:
-    components = fname.split('_')
-    filename = path+fname
-    data = raw(filename)
-    subject_id = components[4]
-    eyes = components[3]
-    visit = components[6]
-    group = components[5]
-    remica = components[0]
-    task = components[2]
-    print fname
-    print subject_id+eyes+visit+group
-    output_file = output_directory+'Subject'+subject_id
-    condition = visit+'/'+task+'/'+eyes+'/magnetometer/'+remica
-    write_to_HDF5(data['magnetometer'],output_file, condition, 250.0, bands=bands,\
+
+for dirname in dirList:
+    if not dirname.endswith('-f.ds'):
+        continue
+    print dirname
+    data = preprocessed_mat(dirname+'/', sensor)
+
+    components = dirname.split('_')
+    name = components[0]
+    number = components[0]
+    output_file = output_path+name
+
+    date = components[2]
+    task = components[1]
+
+    preproc.write_to_HDF5(data,output_file, task, sampling_rate=sampling_rate, bands=bands,\
             window=window, taps=taps,\
-            group_name='GSK'+group, species='human', location='MRC', number_in_group=int(subject_id))
-    condition = visit+'/'+task+'/'+eyes+'/gradiometer/'+remica
-    write_to_HDF5(data['gradiometer'],output_file, condition, 250.0, bands=bands,\
-            window=window, taps=taps,\
-            group_name='GSK'+group, species='human', location='MRC', number_in_group=int(subject_id))
+            downsample=downsample,
+            group_name=group_name, species=species, location=location,\
+                    number_in_group=number, name=name, date=date)

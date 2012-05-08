@@ -1,6 +1,6 @@
 def preprocessed_mat(directory, sensor):
     from scipy.io import loadmat
-    directory = '/data/alstottj/NIMH/rest/'+directory
+    directory = '/data/alstottj/NIMH/Original/rest/'+directory
     if sensor=='planar':
         matfile = loadmat(directory+'MEG_planar_preproc_norm2.mat')
     elif sensor=='planar_combined':
