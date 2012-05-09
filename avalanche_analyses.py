@@ -28,7 +28,7 @@ filter_type = 'FIR'
 taps = 512
 window = 'hamming'
 transd = False
-mains = 50
+mains = 60
 
 visits = ['', '0', '1','2','3','4','5','6','7','8']
 #tasks = ['rest']
@@ -37,6 +37,8 @@ tasks = ['rest']
 rem=False
 rest='rested'
 drug='none'
+location='NIMH'
+
 
 dirList=os.listdir(data_path)
 for fname in dirList:
@@ -46,6 +48,9 @@ for fname in dirList:
     number_in_group = f.attrs['number_in_group']
     species = f.attrs['species']
     location = f.attrs['location']
+    date = f.attrs['date']
+#    sensor_type = f.attrs['sensor_type']
+    sensor_type = 'MEG'
 
     subject = session.query(db.Subject).\
             filter_by(species=species, group_name=group_name, name=number_in_group).first()
@@ -69,6 +74,7 @@ for fname in dirList:
         print base
 
         duration = f[base+'/raw/displacement'].shape[1]
+        sensor_count = f[base+'/raw/displacement'].shape[0]
 
         task = session.query(db.Task).\
                 filter_by(type=task_type).first()
@@ -79,10 +85,10 @@ for fname in dirList:
             session.commit()
 
         sensor = session.query(db.Sensor).\
-                filter_by(location=number_in_group, sensor_type='ECoG').first()
+                filter_by(location=location, sensor_type=sensor_type, sensor_count=sensor_count).first()
         if not sensor:
             print('Sensor not found! Adding.')
-            sensor = db.Sensor(location=number_in_group, sensor_type='ECoG')
+            sensor = db.Sensor(location=location, sensor_type=sensor_type, sensor_count=sensor_count)
             session.add(sensor)
             session.commit()
         
@@ -92,10 +98,10 @@ for fname in dirList:
             visit_number=int(visit)
         experiment = session.query(db.Experiment).\
                 filter_by(location=location, subject_id=subject.id, visit_number=visit_number, mains=mains, drug=drug,\
-                rest=rest, task_id=task.id).first()
+                rest=rest, task_id=task.id, date=date).first()
         if not experiment:
             experiment = db.Experiment(location=location, subject_id=subject.id, visit_number=visit_number, mains=mains, drug=drug,\
-                rest=rest, task_id=task.id)
+                rest=rest, task_id=task.id, date=date)
             session.add(experiment)
             session.commit()
 
